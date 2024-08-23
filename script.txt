@@ -1,0 +1,173 @@
+############################################################################################################
+# Set environment variables
+############################################################################################################
+
+export PROJECT_ID=loyal-radar-433219-u2
+export PROJECT_NR=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+export REGION=europe-west1
+export VPC_NAME=ab-vpc
+export SUBNET_NAME=ab-vpc-subnet
+
+# host project id (shared vpc)
+export HOST_PROJECT_ID=loyal-radar-433219-u2
+# name of /28 subnet available on shared vpc
+export HOST_VPC_SUBNET=ab-vpc-subnet-serverless
+
+export SERVERLESS_CON_NAME=ab-serverless-connector
+export SERVICE_DIR_NS=ab-service-dir
+export SERVICE_NAME=ab-test-service
+
+############################################################################################################
+# Enable APIs
+############################################################################################################
+
+gcloud  --quiet services enable compute.googleapis.com --project $PROJECT_ID
+gcloud  --quiet services enable dialogflow.googleapis.com --project $PROJECT_ID
+gcloud  --quiet services enable vpcaccess.googleapis.com --project $PROJECT_ID
+gcloud  --quiet services enable run.googleapis.com --project $PROJECT_ID
+gcloud  --quiet services enable privateca.googleapis.com --project $PROJECT_ID
+gcloud  --quiet services enable servicedirectory.googleapis.com --project $PROJECT_ID
+gcloud  --quiet services enable cloudbuild.googleapis.com --project $PROJECT_ID
+gcloud  --quiet services enable containerregistry.googleapis.com --project $PROJECT_ID
+gcloud  --quiet services enable cloudfunctions.googleapis.com --project $PROJECT_ID
+
+############################################################################################################
+# Deploy serverless VPC connector
+############################################################################################################
+
+# enable vpcaccess api
+gcloud  --quiet services enable vpcaccess.googleapis.com --project $PROJECT_ID
+
+# assign permission to Serverless Connector Agent to list Shared VPC networks
+gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
+--role "roles/compute.networkUser" \
+--member "serviceAccount:service-$PROJECT_NR@gcp-sa-vpcaccess.iam.gserviceaccount.com"
+
+gcloud projects add-iam-policy-binding $HOST_PROJECT_ID \
+--role "roles/compute.networkUser" \
+--member "serviceAccount:$PROJECT_NR@cloudservices.gserviceaccount.com"
+
+# deploy serverless connector (adapt instance min, max and type to your needs)
+gcloud compute networks vpc-access connectors create $SERVERLESS_CON_NAME \
+    --region $REGION \
+    --subnet $HOST_VPC_SUBNET \
+    --subnet-project $HOST_PROJECT_ID \
+    --min-instances 2 \
+    --max-instances 10 \
+    --machine-type e2-micro
+
+############################################################################################################
+# Deploy a hello world cloud function
+############################################################################################################
+
+# clone locally the application repository
+git clone https://github.com/GoogleCloudPlatform/nodejs-docs-samples.git
+
+# deploy the application with ingress internal-only and serveless connector
+gcloud --quiet functions deploy $SERVICE_NAME \
+    --gen2 \
+    --project=$PROJECT_ID \
+    --region=$REGION \
+    --runtime=nodejs16 \
+    --source=nodejs-docs-samples/functions/helloworld/helloworldGet/ \
+    --entry-point=helloGET \
+    --ingress-settings=internal-only \
+    --trigger-http \
+    --no-allow-unauthenticated  \
+    --vpc-connector projects/$HOST_PROJECT_ID/locations/$REGION/connectors/$SERVERLESS_CON_NAME
+
+# gather cloud function uri
+export CF_HELLO_URL=$(gcloud functions describe $SERVICE_NAME --region=$REGION --project=$PROJECT_ID --format=json | jq --raw-output .serviceConfig.uri)
+
+# assign permission to Dialogflow Service Agent
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+--role "roles/run.invoker" \
+--member "serviceAccount:service-$PROJECT_NR@gcp-sa-dialogflow.iam.gserviceaccount.com"
+
+# ############################################################################################################
+# # Setup Service Directory
+# ############################################################################################################
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+--role "roles/servicedirectory.viewer" \
+--member "serviceAccount:service-$PROJECT_NR@gcp-sa-dialogflow.iam.gserviceaccount.com"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+--role "roles/servicedirectory.pscAuthorizedService" \
+--member "serviceAccount:service-$PROJECT_NR@gcp-sa-dialogflow.iam.gserviceaccount.com"
+
+# create Service Directory namespace
+gcloud service-directory namespaces create $SERVICE_DIR_NS --location=$REGION 
+
+# create Service on the namespace for Cloud Run app
+gcloud service-directory services create $SERVICE_NAME \
+  --project=$PROJECT_ID \
+  --namespace=$SERVICE_DIR_NS \
+  --location=$REGION
+
+# ############################################################################################################
+# # Configure Private Certification Authority for ILB Certificates
+# ############################################################################################################
+
+openssl genrsa -out server.key 2048
+openssl req -nodes -new -sha256 -newkey rsa:2048 -key server.key -subj "/CN=ab-test-service.ab-service-dir.example.com" -out server.csr
+openssl x509 -req -days 3650 -sha256 -in server.csr -signkey server.key -out server.crt -extfile <(printf "\nsubjectAltName='DNS:ab-test-service.ab-service-dir.example.com'")
+openssl x509 -in server.crt -out server.der -outform DER
+
+############################################################################################################
+# Set Up HTTP Internal Load Balancer
+############################################################################################################
+
+# create a backend for Cloud Function app
+gcloud compute backend-services create $SERVICE_NAME-backend \
+        --load-balancing-scheme=INTERNAL_MANAGED \
+        --protocol=HTTP \
+        --region=$REGION
+
+# create Serverless NEG for the Cloud Function Gen2 (aka Cloud Run)
+gcloud compute network-endpoint-groups create $SERVICE_NAME-neg \
+    --network-endpoint-type=serverless \
+    --region=$REGION \
+    --cloud-run-service=$SERVICE_NAME
+
+# add Serverless NEG to Backend
+gcloud compute backend-services add-backend $SERVICE_NAME-backend \
+  --region=$REGION \
+  --network-endpoint-group=$SERVICE_NAME-neg \
+  --network-endpoint-group-region=$REGION
+
+# add url-map to Backend (in this case we keep it simple)
+gcloud compute url-maps create $SERVICE_NAME-url-map \
+  --default-service=$SERVICE_NAME-backend \
+  --region=$REGION
+
+# add private certificate
+gcloud compute ssl-certificates create star-a-run-app \
+  --certificate ./server.crt \
+  --private-key ./server.key \
+  --region=$REGION
+
+# create target proxy with certificate (aka Front End)
+gcloud compute target-https-proxies create $SERVICE_NAME-target-proxy \
+  --ssl-certificates=star-a-run-app \
+  --url-map=$SERVICE_NAME-url-map \
+  --region=$REGION
+
+# generate forwarding rule (aka internal load balancer)
+gcloud beta compute forwarding-rules create $SERVICE_NAME-forwarding-rule \
+  --region=$REGION \
+  --load-balancing-scheme=INTERNAL_MANAGED \
+  --network=$VPC_NAME \
+  --subnet=$SUBNET_NAME \
+  --subnet-region=$REGION \
+  --allow-global-access \
+  --target-https-proxy=$SERVICE_NAME-target-proxy \
+  --target-https-proxy-region=$REGION \
+  --ports=443 \
+  --service-directory-registration=projects/$PROJECT_ID/locations/$REGION/namespaces/$SERVICE_DIR_NS/services/$SERVICE_NAME
+
+
+echo "Now you can set up the Webhook on Agent Builder:"
+echo "Service Directory uri: projects/$PROJECT_ID/locations/$REGION/namespaces/$SERVICE_DIR_NS/services/$SERVICE_NAME"
+echo "Url: $CF_HELLO_URL"
+echo "Attach CA file: server.der (from current folder)"
