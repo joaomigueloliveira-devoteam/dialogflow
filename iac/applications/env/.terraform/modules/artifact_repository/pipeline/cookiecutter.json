@@ -1,0 +1,10 @@
+{
+  "pipeline_name": "pipeline",
+  "pipeline_sa": "sa-vertex-{{cookiecutter['pipeline_name'].replace('_', '-')}}",
+  "pipeline_description": "Sample pipeline.",
+  "__prompts__": {
+    "pipeline_name": "Insert the pipeline name",
+    "pipeline_sa": "Insert the pipeline service account name",
+    "pipeline_description": "Provide a short description of the pipeline"
+  }
+}

@@ -1,0 +1,3 @@
+bucket  = "{% raw %}{{ terraform_state_bucket }}{% endraw %}"
+prefix  = "static.tfstate.d"
+impersonate_service_account = "{% raw %}{{ terraform_service_account }}{% endraw %}"

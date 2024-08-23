@@ -150,52 +150,6 @@ module "basic" {
 
   depends_on = [null_resource.dummy_pipeline_job]
 }
-# module "vpc" {
-#   for_each = var.vpc
-#   source   = "../../modules/network/vpc"
-
-#   project                        = each.value.project
-#   description                    = each.value.description
-#   subnets                        = each.value.subnets
-#   routing_mode                   = each.value.routing_mode
-#   skip_default_deny_fw           = lookup(each.value, "skip_default_deny_fw", false)
-#   delete_default_route_on_create = true # Will be created by Terraform so it's managed and can be removed at a later time
-#   firewall_logging_mode          = lookup(each.value, "firewall_logging_mode", null)
-
-
-#   #namespace forced by module - no need in passing as will be overwritten anyway.
-#   #to avoid using namespace, supply a custom label_order excluding it.
-#   tenant      = lookup(each.value, "tenant", null)
-#   environment = lookup(each.value, "environment", null)
-#   stage       = lookup(each.value, "stage", null)
-#   name        = lookup(each.value, "name", null)
-#   attributes  = lookup(each.value, "attributes", null)
-#   label_order = lookup(each.value, "label_order", null)
-#   context     = module.this.context
-
-# }
-
-# module "firewalls" {
-#   for_each            = var.firewalls
-#   source              = "../../modules/network/firewall"
-#   project             = each.value.project
-#   network             = each.value.network
-#   egress_allow_range  = lookup(each.value, "egress_allow_range", {})
-#   ingress_allow_tag   = lookup(each.value, "ingress_allow_tag", {})
-#   ingress_allow_range = lookup(each.value, "ingress_allow_range", {})
-#   egress_deny_range   = lookup(each.value, "egress_deny_range", {})
-#   depends_on          = [module.vpc]
-
-#   #namespace forced by module - no need in passing as will be overwritten anyway.
-#   #to avoid using namespace, supply a custom label_order excluding it.
-#   tenant      = lookup(each.value, "tenant", null)
-#   environment = lookup(each.value, "environment", null)
-#   stage       = lookup(each.value, "stage", null)
-#   name        = lookup(each.value, "name", null)
-#   attributes  = lookup(each.value, "attributes", null)
-#   label_order = lookup(each.value, "label_order", null)
-#   context     = module.this.context
-# }
 
 resource "google_compute_region_network_endpoint_group" "serverless_neg" {
   provider              = google-beta
@@ -239,13 +193,13 @@ resource "google_cloud_run_service_iam_member" "public-access" {
 
 resource "google_service_directory_namespace" "example" {
   provider     = google-beta
-  namespace_id = "dialogflow"
+  namespace_id = "${var.net_name}-directory"
   location     = var.region
 }
 
 resource "google_service_directory_service" "example" {
   provider   = google-beta
-  service_id = "example-service"
+  service_id = "${var.net_name}-directory"
   namespace  = google_service_directory_namespace.example.id
 
   metadata = {
@@ -262,13 +216,13 @@ resource "google_compute_http_health_check" "default" {
 }
 
 resource "google_compute_network" "ilb_network" {
-  name                    = "l7-ilb-network"
+  name                    = "${var.net_name}-network"
   provider                = google-beta
   auto_create_subnetworks = false
 }
 
 resource "google_compute_subnetwork" "proxy_subnet" {
-  name          = "l7-ilb-proxy-subnet"
+  name          = "${var.net_name}-proxy-subnet"
   provider      = google-beta
   ip_cidr_range = "10.0.0.0/24"
   region        = var.region
@@ -278,7 +232,7 @@ resource "google_compute_subnetwork" "proxy_subnet" {
 }
 
 resource "google_compute_subnetwork" "ilb_subnet" {
-  name          = "l7-ilb-subnet"
+  name          = "${var.net_name}-subnet"
   provider      = google-beta
   ip_cidr_range = "10.0.1.0/24"
   region        = var.region
@@ -298,7 +252,7 @@ resource "google_compute_region_ssl_certificate" "default" {
 }
 
 resource "google_compute_region_target_https_proxy" "default" {
-  name             = "l7-ilb-target-http-proxy"
+  name             = "${var.net_name}-target-http-proxy"
   url_map          = google_compute_region_url_map.default.id
   region           = var.region
   ssl_certificates = [google_compute_region_ssl_certificate.default.id]
@@ -328,7 +282,7 @@ resource "google_compute_region_backend_service" "default" {
 }
 
 resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
-  name                  = "l7-ilb-forwarding-rule"
+  name                  = "${var.net_name}-forwarding-rule"
   provider              = google-beta
   region                = var.region
   depends_on            = [google_compute_subnetwork.proxy_subnet]

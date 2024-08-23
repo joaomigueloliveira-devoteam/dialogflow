@@ -3,7 +3,7 @@ project_poc=dialogflow-433314
 project_internal=dialogflow-433314
 
 cd env
-. ssl.sh
+# . ssl.sh
 # for env in dev prod; do
 for env in poc; do
 

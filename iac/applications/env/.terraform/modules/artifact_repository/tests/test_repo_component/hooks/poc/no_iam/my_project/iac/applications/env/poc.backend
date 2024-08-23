@@ -1,0 +1,3 @@
+bucket  = "gcs-my-project-tfstate"
+prefix  = "static.tfstate.d"
+impersonate_service_account = "terraform@my-project.iam.gserviceaccount.com"

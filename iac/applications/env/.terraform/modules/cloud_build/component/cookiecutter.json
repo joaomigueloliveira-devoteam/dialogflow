@@ -1,0 +1,19 @@
+{
+  "base_image": "python",
+  "component_name": "custom_component",
+  "entrypoint_format": [
+    "python",
+    "bash",
+    "other"
+  ],
+  "tag": "latest",
+  "image_dest": "${_ARTIFACT_REGISTRY_CONTAINERS_URL}/{{cookiecutter['component_name']}}",
+  "__tagged_base_image": "{{cookiecutter['base_image']}}:{{cookiecutter['tag']}}",
+  "__prompts__": {
+    "base_image": "Insert the base image (without tag)",
+    "component_name": "Insert the component name",
+    "entrypoint_format": "Choose a component format",
+    "tag": "Insert the base image tag",
+    "image_dest": "Insert the component destination"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "template": [
+    "PoC IaC (poc)",
+    "Project IaC (base)",
+    "Pipeline (pipeline)",
+    "Component (component)"
+  ]
+}

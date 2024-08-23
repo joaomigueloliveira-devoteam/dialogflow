@@ -152,28 +152,6 @@ variable "user_roles" {
   default = {}
 }
 
-# variable "vpc" {
-#   description = "The vpcs to be created"
-# }
-# variable "firewalls" {
-#   description = "The firewall rules to create"
-# }
-# variable "dns" {
-#   description = "dns"
-# }
-
-# variable "ssl" {
-#   description = "Run load balancer on HTTPS and provision managed certificate with provided `domain`."
-#   type        = bool
-#   default     = true
-# }
-
-# variable "domain" {
-#   description = "Domain name to run the load balancer on. Used if `ssl` is `true`."
-#   type        = string
-# }
-
-# variable "lb_name" {
-#   description = "Name for load balancer and associated resources"
-#   default     = "tf-cr-lb"
-# }
+variable "net_name" {
+  description = "The vpcs to be created"
+}

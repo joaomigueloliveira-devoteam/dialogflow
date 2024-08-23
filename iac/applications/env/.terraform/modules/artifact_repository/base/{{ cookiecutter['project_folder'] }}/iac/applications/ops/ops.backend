@@ -1,0 +1,3 @@
+bucket  = "{{ cookiecutter['tfstate_bucket_ops'] }}"
+prefix  = "static.tfstate.d"
+impersonate_service_account = "{{ cookiecutter['tf_sa_ops'] }}"
