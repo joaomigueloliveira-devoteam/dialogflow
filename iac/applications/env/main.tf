@@ -157,7 +157,7 @@ module "basic" {
 
 
 resource "google_compute_region_network_endpoint_group" "serverless_neg" {
-  for_each = local.cloud_runs
+  for_each              = local.cloud_runs
   provider              = google-beta
   name                  = each.key
   network_endpoint_type = "SERVERLESS"
@@ -229,7 +229,7 @@ resource "google_compute_region_ssl_certificate" "default" {
 }
 
 resource "google_compute_region_target_https_proxy" "default" {
-  for_each = local.cloud_runs
+  for_each         = local.cloud_runs
   name             = "${var.net_name}-target-http-proxy-${each.key}"
   url_map          = google_compute_region_url_map.default[each.key].id
   region           = var.region
@@ -242,7 +242,7 @@ resource "google_compute_region_url_map" "default" {
   provider = google-beta
 
   region          = var.region
-  name            = "website-map-${each.key}"  # Ensure the name is unique per instance
+  name            = "website-map-${each.key}" # Ensure the name is unique per instance
   default_service = google_compute_region_backend_service.default[each.key].id
 }
 
@@ -280,4 +280,3 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
     service   = google_service_directory_service.example.service_id
   }
 }
-

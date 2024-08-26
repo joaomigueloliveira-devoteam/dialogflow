@@ -2,3 +2,31 @@
 *.csr
 *.crt
 *.key
+.terraform
+tf.plan
+
+# Python files
+__pycache__/
+
+# Don't ignore gitkeep files so that we can retain
+# empty folder structure for data directory
+!/**/.gitkeep
+
+# Ignore environment files
+.DS_Store
+
+# Ignore data
+data
+!data/.gitkeep
+!data/**/.gitkeep
+
+.chainlit/
+.files/
+.venv*
+images/
+.env
+.envrc
+.secrets
+*.csv
+*.json
+*.jsonl

@@ -20,6 +20,7 @@ pandas==2.2.0
 google-api-python-client==2.114.0
 google-auth-httplib2==0.2.0
 google-auth-oauthlib==1.2.0
+google-cloud-discoveryengine
 # google-cloud-aiplatform==1.50.0
 # google-cloud-datastore==2.8.0
 # google-cloud-pubsub==2.21.0

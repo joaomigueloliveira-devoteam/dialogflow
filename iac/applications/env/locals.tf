@@ -114,6 +114,11 @@ locals {
       email  = "service-${data.google_project.project.number}@gcp-sa-dialogflow.iam.gserviceaccount.com"
       create = false
     }
+    "discoveryengine.googleapis.com" = {
+      email  = "service-${data.google_project.project.number}@gcp-sa-discoveryengine.iam.gserviceaccount.com"
+      create = false
+    }
+
   }
 
   all_service_accounts = merge(local.service_agents, local.service_accounts)
@@ -133,7 +138,14 @@ locals {
       "roles/run.invoker",
       "roles/servicedirectory.viewer",
       "roles/servicedirectory.pscAuthorizedService",
-    ]
+      ], 
+    "discoveryengine.googleapis.com" : [
+      "roles/run.invoker",
+      "roles/servicedirectory.viewer",
+      "roles/servicedirectory.pscAuthorizedService",
+      "roles/storage.admin"
+    ],
+
   }
 
   ar_reader_roles = {
