@@ -59,8 +59,17 @@ def get_search_results(
 async def get_speaker(query: Optional[str] = None):
 
     search_results = get_search_results(query)
+    keys = ["bio", "day", "topic_summary", "name"]
+    result_keys = search_results['response'][0].keys()
 
-    return search_results
+    keys = result_keys - keys
+    for key in keys:
+        del search_results['response'][0][key]
+
+
+    return {"topic": "memes about potato",
+            "bio": query,
+            "topic_description": "he like potato and memes"}
 
 if __name__ == "__main__":
 
