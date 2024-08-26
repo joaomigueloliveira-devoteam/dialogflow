@@ -88,20 +88,24 @@ module "buckets" {
 }
 
 module "cloud_build" {
-  for_each = merge(var.pipeline_triggers, var.component_triggers)
+  for_each = merge(var.pipeline_triggers, var.component_triggers, { for alias, run in local.cloud_runs : alias => run.cloud_build_trigger })
   # tflint-ignore: terraform_module_pinned_source
-  source = "git@github.com:devoteamgcloud/accel-vertex-ai-cookiecutter-templates.git//terraform-modules/cloud_build"
+  source = "../../modules/cloud_build"
 
-  included      = each.value.included
-  path          = each.value.path
-  branch_regex  = each.value.branch_regex
-  project_id    = var.project_id
-  repo_owner    = var.repo_owner
-  repo_name     = var.repo_name
+  included        = each.value.included
+  path            = each.value.path
+  branch_regex    = each.value.branch_regex
+  project_id      = var.project_id
+  repository_org  = var.repo_owner
+  repository_name = var.repo_name
+
+  location          = var.location
+  parent_connection = var.parent_connection
+  service_account   = local.cloud_build_service_account_email
+
   substitutions = local.cloud_build_substitutions[each.key]
   trigger_name  = each.key
-
-  depends_on = [time_sleep.api_propagation]
+  depends_on    = [time_sleep.api_propagation]
 }
 
 resource "null_resource" "dummy_pipeline_job" {
@@ -116,10 +120,11 @@ resource "null_resource" "dummy_pipeline_job" {
   depends_on = [time_sleep.api_propagation]
 }
 
-module "run" {
-  for_each = local.cloud_run
-
+module "cloud_runs" {
+  for_each = local.cloud_runs
+  # tflint-ignore: terraform_module_pinned_source
   source = "git@github.com:devoteamgcloud/tf-gcp-modules-cloud-run.git?ref=v1.0.0"
+
   project                 = var.project_id
   name                    = each.key
   location                = each.value.location
@@ -136,8 +141,7 @@ module "run" {
   secrets                 = each.value.secrets
   traffic                 = each.value.traffic
   vpc_access_connector_id = each.value.vpc_access_connector_id
-
-  depends_on = [time_sleep.api_propagation, module.basic]
+  depends_on              = [time_sleep.api_propagation, module.basic]
 }
 
 module "basic" {
@@ -272,20 +276,20 @@ resource "google_compute_region_backend_service" "default" {
   load_balancing_scheme = "INTERNAL_MANAGED"
 
   backend {
-    group = google_compute_region_network_endpoint_group.serverless_neg.id
+    group          = google_compute_region_network_endpoint_group.serverless_neg.id
     balancing_mode = "UTILIZATION"
   }
 
-  region      = var.region
-  name        = "website-backend"
-  protocol    = "HTTP"
+  region   = var.region
+  name     = "website-backend"
+  protocol = "HTTP"
 }
 
 resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
-  name                  = "${var.net_name}-forwarding-rule"
-  provider              = google-beta
-  region                = var.region
-  depends_on            = [google_compute_subnetwork.proxy_subnet]
+  name       = "${var.net_name}-forwarding-rule"
+  provider   = google-beta
+  region     = var.region
+  depends_on = [google_compute_subnetwork.proxy_subnet]
   # ip_protocol           = "TCP"
   load_balancing_scheme = "INTERNAL_MANAGED"
   port_range            = "443"

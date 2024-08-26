@@ -2,7 +2,7 @@ data "google_project" "project" {}
 
 locals {
 
-  cloud_run = { for k, v in var.cloud_run : k => merge(v, {
+  cloud_runs = { for k, v in var.cloud_runs : k => merge(v, {
     service_account_email = try(module.basic.service_accounts[v.service_account].email, var.service_accounts[v.service_account].email)
     iam = merge(
       merge([for sa, roles in v.sa : { for role in roles : "${sa}/${role}" => {
@@ -17,7 +17,7 @@ locals {
         member = "group:${group}"
         role   = role
       } }]...)
-    )})
+    ) })
   }
 
   all_vertex_ai_agents = [
@@ -38,16 +38,35 @@ locals {
     }
   }
   cloud_build_substitutions = merge(
-    { for trigger_name, config in merge(var.pipeline_triggers, var.component_triggers) : trigger_name => merge(config.substitutions, {
-      "_PROJECT_ROOT"                     = "dialogflow-433314"
+    { for trigger_name, config in merge(
+      var.pipeline_triggers,
+      var.component_triggers,
+      var.container_triggers,
+
+      ) : trigger_name => merge(config.substitutions, {
+        "_PROJECT_ROOT"                     = var.project_id
+        "_PROJECT_ID"                       = var.project_id
+        "_REGION"                           = var.region
+        "_ARTIFACT_REGISTRY_CONTAINERS_URL" = "${var.artifact_registry_repositories["pipeline-containers"].location}-docker.pkg.dev/${var.project_id}/pipeline-containers"
+        "_ARTIFACT_REGISTRY_TEMPLATES_URL"  = "https://${var.artifact_registry_repositories["pipeline-templates"].location}-kfp.pkg.dev/${var.project_id}/pipeline-templates"
+    }) },
+    { for trigger_name, run in local.cloud_runs : trigger_name => merge(run.cloud_build_trigger.substitutions, {
+      "_PROJECT_ROOT"                     = var.project_id
+      "_PROJECT_ID"                       = var.project_id
       "_REGION"                           = var.region
+      "_SERVICE_NAME"                     = trigger_name
+      "_SERVICE_ACCOUNT"                  = run.service_account_email
       "_ARTIFACT_REGISTRY_CONTAINERS_URL" = "${var.artifact_registry_repositories["pipeline-containers"].location}-docker.pkg.dev/${var.project_id}/pipeline-containers"
       "_ARTIFACT_REGISTRY_TEMPLATES_URL"  = "https://${var.artifact_registry_repositories["pipeline-templates"].location}-kfp.pkg.dev/${var.project_id}/pipeline-templates"
     }) }
   )
+
+  cloud_build_service_account_email = "projects/-/serviceAccounts/sa-cloud-build-triggers@${var.project_id}.iam.gserviceaccount.com"
   # IAM
 
+
   cloud_build_service_account = {
+
     email  = "${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
     create = false
   }
@@ -91,7 +110,7 @@ locals {
       email  = "service-${data.google_project.project.number}@serverless-robot-prod.iam.gserviceaccount.com"
       create = false
     },
-    "dialogflow.googleapis.com"={
+    "dialogflow.googleapis.com" = {
       email  = "service-${data.google_project.project.number}@gcp-sa-dialogflow.iam.gserviceaccount.com"
       create = false
     }
@@ -100,7 +119,7 @@ locals {
   all_service_accounts = merge(local.service_agents, local.service_accounts)
 
   default_roles = {
-    "aiplatform.googleapis.com" : ["roles/aiplatform.serviceAgent"],
+    "aiplatform.googleapis.com" : ["projects/${data.google_project.project.project_id}/roles/artifactRegistryUser", "roles/aiplatform.serviceAgent"],
     "cc-aiplatform.googleapis.com" : ["roles/aiplatform.customCodeServiceAgent"],
     "artifactregistry.googleapis.com" : ["roles/artifactregistry.serviceAgent"],
     "cloudbuild.googleapis.com" : ["roles/cloudbuild.serviceAgent"],

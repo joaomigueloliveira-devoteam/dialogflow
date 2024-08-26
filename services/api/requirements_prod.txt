@@ -1,0 +1,25 @@
+fastapi==0.111.0
+# langchain==0.2.7
+# langchain-community==0.2.7
+# langchain-google-vertexai==1.0.4
+# wikipedia==1.4.0
+# langgraph==0.1.6
+# tiktoken==0.7.0
+# scikit-learn==1.5.1
+# langserve==0.2.2
+# sse-starlette==1.8.2
+# loguru
+# chromadb==0.5.4
+# nanoid==2.0.0
+pandas==2.2.0
+# chromadbx==0.0.3
+# openpyxl
+# langchain_google_alloydb_pg==0.2.2
+# google-cloud-alloydb-connector==1.1.1
+# google-cloud-secret-manager==2.20.0
+google-api-python-client==2.114.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.0
+# google-cloud-aiplatform==1.50.0
+# google-cloud-datastore==2.8.0
+# google-cloud-pubsub==2.21.0

@@ -1,0 +1,39 @@
+steps:
+
+  - name: "gcr.io/cloud-builders/docker"
+    dir: "services/api"
+    entrypoint: bash
+    args:
+      - "-c"
+      - |
+        branch_name=$BRANCH_NAME
+        branch=${branch_name//\//-}
+        docker build -t ${_ARTIFACT_REGISTRY_CONTAINERS_URL}/${_SERVICE_NAME}:latest \
+                     -t ${_ARTIFACT_REGISTRY_CONTAINERS_URL}/${_SERVICE_NAME}:$SHORT_SHA \
+                     -t ${_ARTIFACT_REGISTRY_CONTAINERS_URL}/${_SERVICE_NAME}:$branch \
+                     --network=cloudbuild \
+                     .
+
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: "services/api"
+    entrypoint: docker
+    args: [
+      "push",
+      "-a",
+      "${_ARTIFACT_REGISTRY_CONTAINERS_URL}/${_SERVICE_NAME}",
+    ]
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    dir: "services/api"
+    entrypoint: gcloud
+    args: [
+      "run",
+      "deploy",
+      "${_SERVICE_NAME}",
+      "--image=${_ARTIFACT_REGISTRY_CONTAINERS_URL}/${_SERVICE_NAME}:${SHORT_SHA}",
+      "--region=${_REGION}",
+      "--service-account=${_SERVICE_ACCOUNT}"
+    ]
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -1,3 +1,0 @@
-bucket  = "{{ terraform_state_bucket }}"
-prefix  = "static.tfstate.d"
-impersonate_service_account = "{{ terraform_service_account }}"

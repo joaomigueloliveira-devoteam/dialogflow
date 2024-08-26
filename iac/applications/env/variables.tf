@@ -31,11 +31,20 @@ variable "artifact_registry_repositories" {
 }
 
 # Cloud Build
+# Cloud Build
 variable "repo_owner" {
   type        = string
   description = "The owner of the repository containing pipelines definitions in Google Source Repositories."
 }
+variable "parent_connection" {
+  type        = string
+  description = "connection name"
+}
+variable "location" {
+  type        = string
+  description = "Location of repository"
 
+}
 variable "repo_name" {
   type        = string
   description = "The ID of the repository containing pipelines definitions in Google Source Repositories."
@@ -50,9 +59,17 @@ variable "pipeline_triggers" {
     branch_regex  = string
   }))
 }
-
 variable "component_triggers" {
   description = "The Cloud Build triggers to build pipelines."
+  type = map(object({
+    included      = list(string)
+    path          = string
+    substitutions = map(string)
+    branch_regex  = string
+  }))
+}
+variable "container_triggers" {
+  description = "The Cloud Build triggers to build containers."
   type = map(object({
     included      = list(string)
     path          = string
@@ -71,7 +88,7 @@ variable "buckets" {
 }
 
 # Cloud Run
-variable "cloud_run" {
+variable "cloud_runs" {
   type = map(object({
     location                = string
     cpu                     = optional(string, "2")
@@ -88,6 +105,15 @@ variable "cloud_run" {
     groups                  = optional(map(list(string)), {})
     sa                      = optional(map(list(string)), {})
     users                   = optional(map(list(string)), {})
+    path_url_map            = optional(string)
+    protocol_name           = optional(string)
+    enable_iap              = bool
+    cloud_build_trigger = object({
+      included      = list(string)
+      path          = string
+      substitutions = map(string)
+      branch_regex  = string
+    })
     secrets = optional(map(object({
       version = optional(string, "latest")
       name    = string
@@ -97,12 +123,12 @@ variable "cloud_run" {
       percent  = optional(number)
       revision = optional(string)
       tag      = optional(string)
-    }), {
-      type = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+      }), {
+      type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
       percent = 100
     })
   }))
-  default = {}
+  default     = {}
   description = "Defines the Cloud Run services."
 }
 
@@ -128,27 +154,27 @@ variable "service_accounts" {
 }
 
 variable "groups" {
-  type = any
+  type    = any
   default = {}
 }
 
 variable "folders" {
-  type = any
+  type    = any
   default = {}
 }
 
 variable "group_roles" {
-  type = any
+  type    = any
   default = {}
 }
 
 variable "service_account_roles" {
-  type = any
+  type    = any
   default = {}
 }
 
 variable "user_roles" {
-  type = any
+  type    = any
   default = {}
 }
 

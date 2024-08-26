@@ -1,1 +1,0 @@
-"""Cookiecutter utils init file."""
