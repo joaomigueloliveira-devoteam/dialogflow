@@ -38,7 +38,7 @@ class Speaker(BaseModel):
     query: str
 
 
-@app.post("/speaker")
+@app.get("/speaker")
 async def speaker(message: Speaker) -> Response:
     """Handle invoke request for generic article."""
     return {
