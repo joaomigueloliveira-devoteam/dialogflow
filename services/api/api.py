@@ -15,14 +15,12 @@ def format_search_results(
 ) -> List[Dict]:
     response_pager_dict = MessageToDict(response_pager._pb)
     return (
-        "{response:"
-        + json.dumps(
+        {"response":
             [
                 result["document"]["structData"]
                 for result in response_pager_dict["results"]
             ]
-        )
-        + "}"
+        }
     )
 
 def get_search_results(
