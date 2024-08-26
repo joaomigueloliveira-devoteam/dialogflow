@@ -155,44 +155,17 @@ module "basic" {
   depends_on = [null_resource.dummy_pipeline_job]
 }
 
+
 resource "google_compute_region_network_endpoint_group" "serverless_neg" {
+  for_each = local.cloud_runs
   provider              = google-beta
-  name                  = "serverless-neg"
+  name                  = each.key
   network_endpoint_type = "SERVERLESS"
   region                = var.region
 
   cloud_run {
-    service = google_cloud_run_service.default.name
+    service = each.key
   }
-}
-
-resource "google_cloud_run_service" "default" {
-  name     = "example"
-  location = var.region
-  project  = var.project_id
-
-  template {
-    spec {
-      containers {
-        image = "gcr.io/cloudrun/hello"
-      }
-    }
-  }
-  metadata {
-    annotations = {
-      # For valid annotation values and descriptions, see
-      # https://cloud.google.com/sdk/gcloud/reference/run/deploy#--ingress
-      "run.googleapis.com/ingress" = "all"
-    }
-  }
-}
-
-resource "google_cloud_run_service_iam_member" "public-access" {
-  location = google_cloud_run_service.default.location
-  project  = google_cloud_run_service.default.project
-  service  = google_cloud_run_service.default.name
-  role     = "roles/run.invoker"
-  member   = "allUsers"
 }
 
 resource "google_service_directory_namespace" "example" {
@@ -256,49 +229,55 @@ resource "google_compute_region_ssl_certificate" "default" {
 }
 
 resource "google_compute_region_target_https_proxy" "default" {
-  name             = "${var.net_name}-target-http-proxy"
-  url_map          = google_compute_region_url_map.default.id
+  for_each = local.cloud_runs
+  name             = "${var.net_name}-target-http-proxy-${each.key}"
+  url_map          = google_compute_region_url_map.default[each.key].id
   region           = var.region
   ssl_certificates = [google_compute_region_ssl_certificate.default.id]
 }
 
+
 resource "google_compute_region_url_map" "default" {
+  for_each = local.cloud_runs
   provider = google-beta
 
   region          = var.region
-  name            = "website-map"
-  default_service = google_compute_region_backend_service.default.id
+  name            = "website-map-${each.key}"  # Ensure the name is unique per instance
+  default_service = google_compute_region_backend_service.default[each.key].id
 }
 
 resource "google_compute_region_backend_service" "default" {
+  for_each = local.cloud_runs
   provider = google-beta
 
   load_balancing_scheme = "INTERNAL_MANAGED"
 
   backend {
-    group          = google_compute_region_network_endpoint_group.serverless_neg.id
+    group          = google_compute_region_network_endpoint_group.serverless_neg[each.key].id
     balancing_mode = "UTILIZATION"
   }
 
   region   = var.region
-  name     = "website-backend"
+  name     = "website-backend-${each.key}"
   protocol = "HTTP"
 }
 
 resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
-  name       = "${var.net_name}-forwarding-rule"
+  for_each   = local.cloud_runs
+  name       = "${var.net_name}-forwarding-rule-${each.key}"
   provider   = google-beta
   region     = var.region
   depends_on = [google_compute_subnetwork.proxy_subnet]
-  # ip_protocol           = "TCP"
+
   load_balancing_scheme = "INTERNAL_MANAGED"
   port_range            = "443"
-  target                = google_compute_region_target_https_proxy.default.id
+  target                = google_compute_region_target_https_proxy.default[each.key].id
   network               = google_compute_network.ilb_network.id
   subnetwork            = google_compute_subnetwork.ilb_subnet.id
-  # network_tier          = "PREMIUM"
+
   service_directory_registrations {
     namespace = google_service_directory_namespace.example.namespace_id
     service   = google_service_directory_service.example.service_id
   }
 }
+

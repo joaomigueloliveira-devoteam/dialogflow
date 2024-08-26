@@ -44,7 +44,7 @@ async def speaker(message: Speaker) -> Response:
     return {
         "topic": "memeology and the world",
         "bio": "Brian likes potato and memes",
-        "topic_description": "memes about potato",
+        "topic_description": "memes about potato, and the world",
     }
 
 
