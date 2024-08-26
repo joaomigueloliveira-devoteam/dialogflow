@@ -1,0 +1,42 @@
+openapi: 3.0.2
+info:
+  title: API
+  description: API to retrieve information about the speaker
+  version: 1.0.0
+servers:
+  - url: 'https://ab-test-service.ab-service-dir.example.com'
+paths:
+  /speaker:
+    get:
+      summary: >-
+        Get speaker bio, and the title of the topic that he will present and its
+        description
+      operationId: Speaker Information
+      parameters:
+        - in: query
+          name: query
+          description: The identifier of the speaker
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product Quantity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  topic:
+                    type: string
+                    description: title of the talk
+                  bio:
+                    type: string
+                    description: speaker bio
+                  topic_description:
+                    type: string
+                    description: description of the talk
+        '400':
+          description: Bad request - Invalid query parameter or missing required parameter
+        '404':
+          description: Product not found
