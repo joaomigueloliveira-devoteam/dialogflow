@@ -6,9 +6,9 @@ info:
 servers:
   - url: 'https://ab-test-service.ab-service-dir.example.com'
 paths:
-  /speakerpost:
+  /speaker:
     post:
-      summary: >-
+      summary: >
         Get speaker bio, and the title of the topic that he will present and its
         description
       operationId: Speaker Information
@@ -25,22 +25,54 @@ paths:
                   example: "speaker-id-123"
       responses:
         '200':
-          description: Product Quantity
+          description: Speaker Information
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  topic:
-                    type: string
-                    description: title of the talk
-                  bio:
-                    type: string
-                    description: speaker bio
-                  topic_description:
-                    type: string
-                    description: description of the talk
+                  response:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Name of the speaker
+                        company:
+                          type: string
+                          description: Company the speaker represents
+                        image:
+                          type: string
+                          description: URL of the speaker's image
+                        bio:
+                          type: string
+                          description: Speaker bio
+                        time:
+                          type: string
+                          format: time
+                          description: Time of the speaker's talk
+                        day:
+                          type: string
+                          format: date
+                          description: Day of the speaker's talk
+                        topic:
+                          type: string
+                          description: Title of the talk
+                        position:
+                          type: number
+                          description: Position of the talk in the event schedule
+                        topic_summary:
+                          type: string
+                          description: Summary of the topic
+                        venue:
+                          type: string
+                          description: Venue where the talk will be held
+                        bq_datetime:
+                          type: string
+                          format: date-time
+                          description: Datetime of the talk in the format YYYY-MM-DD HH:mm:ss
         '400':
           description: Bad request - Invalid query parameter or missing required parameter
         '404':
-          description: Product not found
+          description: Speaker not found
