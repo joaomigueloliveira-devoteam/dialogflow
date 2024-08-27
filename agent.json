@@ -1,10 +1,13 @@
 {
   "defaultLanguageCode": "en",
   "timeZone": "America/Los_Angeles",
+  "enableLogging": true,
   "projectNumber": 982667118013,
+  "enableStackdriverLogging": true,
   "advancedSettings": {
     "loggingSettings": {
-    
+      "enableStackdriverLogging": true,
+      "enableInteractionLogging": true
     }
   },
   "dataResidencyOption": "DATA_RESIDENCY_IN_USE_COMPLIANT",

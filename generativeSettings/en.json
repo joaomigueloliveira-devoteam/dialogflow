@@ -1,6 +1,6 @@
 {
   "fallbackSettings": {
-  
+    "selectedPrompt": "Default"
   },
   "generativeSafetySettings": {
     "raiSettings": {
@@ -41,6 +41,11 @@
     }
   },
   "llmModelSettings": {
-    "model": "gemini-pro"
+    "model": "gemini-pro",
+    "parameters": {
+      "temperature": 0,
+      "inputTokenLimit": "INPUT_TOKEN_LIMIT_UNSPECIFIED",
+      "outputTokenLimit": "OUTPUT_TOKEN_LIMIT_UNSPECIFIED"
+    }
   }
 }

@@ -6,19 +6,23 @@ info:
 servers:
   - url: 'https://ab-test-service.ab-service-dir.example.com'
 paths:
-  /speaker:
-    get:
+  /speakerpost:
+    post:
       summary: >-
         Get speaker bio, and the title of the topic that he will present and its
         description
       operationId: Speaker Information
-      parameters:
-        - in: query
-          name: query
-          description: The identifier of the speaker
-          required: true
-          schema:
-            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                  description: The identifier of the speaker
+                  example: "speaker-id-123"
       responses:
         '200':
           description: Product Quantity
