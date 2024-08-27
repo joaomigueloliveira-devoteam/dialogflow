@@ -1,0 +1,17 @@
+{
+  "name": "23c2456c-c2a4-4595-871b-62e8f7e0a7db",
+  "displayName": "Search Information",
+  "description": "This tools is used to get information about the Youtube Event, it takes a user query as input, and retrieves the multiple talks related to the query, as well as metadata such as Information about the speaker, Description of the talk, date ...",
+  "openApiSpec": {
+    "tlsConfig": {
+      "caCerts": [ {
+        "displayName": "server.der",
+        "cert": "MIIDUDCCAjigAwIBAgIUb3x46F4qQZrhhLVRHx/+6Pf++xIwDQYJKoZIhvcNAQELBQAwNTEzMDEGA1UEAwwqYWItdGVzdC1zZXJ2aWNlLmFiLXNlcnZpY2UtZGlyLmV4YW1wbGUuY29tMB4XDTI0MDgyMzEzNDIwMFoXDTM0MDgyMTEzNDIwMFowNTEzMDEGA1UEAwwqYWItdGVzdC1zZXJ2aWNlLmFiLXNlcnZpY2UtZGlyLmV4YW1wbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlzTA6NOSd/zxXcHgzH7mrRjdUuog9UsqtJee/IYIYpM5ennY6zygDd+sO8JDraH/2Hct41zKiAMLkW5Z3hJoZ8udfuH+EkvxJ7Ifs46LdHBIHjWlORYTUGK7uxxOiMyhaPCokkXgD30BEerrkswOvqOdmF7vWQGJW6SJq51n+2EGmO3/xSPap0lEzjbCvm0YiWGnfLH2SOdcH2bY2lu3rLrwGvIxG/+4I2lgiy1Zm6ULYWFgA00QatlFeJefxu21gzMS1Tcv3V3mC9bol7HU9vO6x2Pks2tIfT6nDdSadIBMuDCFMP6jyucxgtoK+GUBkIBZ857dMDvKX2yfpCkcvwIDAQABo1gwVjA1BgNVHREELjAsgiphYi10ZXN0LXNlcnZpY2UuYWItc2VydmljZS1kaXIuZXhhbXBsZS5jb20wHQYDVR0OBBYEFPg0WcaL/un2qvLQNNVBoPhXuqXfMA0GCSqGSIb3DQEBCwUAA4IBAQCLY9rW97MTMVZl51zXj0PNuwKSEah1Vz0guN2MD78s8+vKQS1eqbRQRMkPXOtVMXUmk/JufxpYWwF828a/DU+I7SButZ2dOZ670FJVg9LjyJ4ARjLCMXKnQdQ3LHE5IG17DCNedhWxc8gLnbuiAhHmA1ATRqKlFOgYfc9izQ2d+FFUMbZQE5M66n/BgnUjUxRoXUHRk8Rz+HZ7nCtwzG+Mpr57VGmRNNcEfqoaN6jkJKQ+O1sJoAbwXM6G0L7dY761rN80viXk0LrVwUDz/SFlwZK1qWRTpsXaB0S5oGsu898PxtX1M+PISxe+rvkKSUZDEr8EPJgg+ojJZ7YYalpj"
+      } ]
+    },
+    "serviceDirectoryConfig": {
+      "service": "projects/dialogflow-433314/locations/europe-west1/namespaces/dialogflow-directory/services/dialogflow-directory"
+    }
+  },
+  "toolType": "CUSTOMIZED_TOOL"
+}
