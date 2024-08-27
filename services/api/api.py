@@ -51,7 +51,7 @@ def get_search_results(
 
     # Build the search request
     request = discoveryengine_v1.SearchRequest(
-        serving_config=serving_config, query=search_query, page_size=1
+        serving_config=serving_config, query=search_query, page_size=5
     )
 
     # Perform the search and return the response
