@@ -5,6 +5,8 @@ from google.cloud import discoveryengine_v1
 from google.protobuf.json_format import MessageToDict
 import json
 from typing import Optional, List, Dict
+from pydantic import BaseModel
+
 app = FastAPI()
 
 PROJECT_ID = os.getenv("PROJECT_ID", "dialogflow-433314")
@@ -55,36 +57,36 @@ def get_search_results(
     # Perform the search and return the response
     return format_search_results(client.search(request))
 
-@app.get("/speaker")
-async def get_speaker(query: Optional[str] = None):
 
-    search_results = get_search_results(query)
-    keys = ["bio", "day", "topic_summary", "name"]
-    result_keys = search_results['response'][0].keys()
+class Speaker(BaseModel):
+    query: str
 
-    keys = result_keys - keys
-    for key in keys:
-        del search_results['response'][0][key]
+@app.post("/speaker2")
+async def get_speaker2(query: Speaker):
+    try:
+        print(query)
+        search_results = get_search_results(query.query)
+        print(search_results)
+        return {
+            "topic": "memes about potato",
+            "bio": query.query,
+            "topic_description": "he like potato and memes"
+        }
+    except KeyError as e:
+        print(f"KeyError: {e}")
+        return {"error": "Unexpected response format from search results."}
 
+@app.post("/speaker")
+async def get_speaker(query: Speaker):
+    try:
+        print(query)
+        search_results = get_search_results(query.query)
+        print(search_results)
+        return search_results
+    except KeyError as e:
+        print(f"KeyError: {e}")
+        return {"error": "Unexpected response format from search results."}
 
-    return {"topic": "memes about potato",
-            "bio": query,
-            "topic_description": "he like potato and memes"}
-@app.post("/speakerpost")
-async def get_speaker(query: Optional[str] = None):
-
-    search_results = get_search_results(query)
-    keys = ["bio", "day", "topic_summary", "name"]
-    result_keys = search_results['response'][0].keys()
-
-    keys = result_keys - keys
-    for key in keys:
-        del search_results['response'][0][key]
-
-
-    return {"topic": "memes about potato",
-            "bio": query,
-            "topic_description": "he like potato and memes"}
 
 if __name__ == "__main__":
 
@@ -92,56 +94,3 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("api:app", host="localhost", port=8000, reload=True)
-# openapi: 3.0.2
-# info:
-#   title: API
-#   description: API to retrieve information about the speaker
-#   version: 1.0.0
-# servers:
-#   - url: 'https://ab-test-service.ab-service-dir.example.com'
-# paths:
-#   /speaker:
-#     get:
-#       summary: >-
-#         Get speaker bio, and the title of the topic that he will present and its
-#         description
-#       operationId: Speaker Information
-#       parameters:
-#         - in: query
-#           name: query
-#           description: The identifier of the speaker
-#           required: true
-#           schema:
-#             type: string
-#       responses:
-#         '200':
-#           description: Product Quantity
-#           content:
-#             application/json:
-#               schema:
-#                 $ref: '#/components/schemas/ListOfCandidates'
-# components:
-#   schemas:
-#     ListOfCandidates:
-#       type: object
-#       properties:
-#         response:
-#           type: array
-#           items:
-#             $ref: '#/components/schemas/List'
-#     List:
-#       type: object
-#       properties:
-#         bio:
-#           type: string
-#         name:
-#           type: string
-#         day:
-#           type: string
-#         topic_summary:
-#           type: string
-#       required:
-#         - bio
-#         - name
-#         - day
-#         - topic_summary
